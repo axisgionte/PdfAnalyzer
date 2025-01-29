@@ -101,7 +101,7 @@ namespace PdfAnalyzer.ViewModels
             if (pdfDocuments.Any())
             {
                 
-                var lines = csvDocument.ToList();
+                var lines = csvDocument.Select(word => word.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty)).ToList();
                 var tasks = new List<Task>();
                 int maxConcurrentTasks = Properties.Settings.Default.ThreadCount;
                 var semaphore = new SemaphoreSlim(maxConcurrentTasks); // Limit number of concurrent tasks
