@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Threading;
 using PdfAnalyzer.Properties;
+using System.Linq;
 
 public class PDFDocument : IDocument
 {
@@ -24,13 +25,12 @@ public class PDFDocument : IDocument
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // If the lines list is empty, return based on the findAllWords flag
+            // If lines are empty, return based on the findAllWords flag
             if (lines.Count == 0)
             {
                 return false;
             }
 
-            // Check if the file exists
             if (!File.Exists(filePath))
             {
                 Debug.WriteLine($"Document not found {filePath}");
@@ -39,22 +39,45 @@ public class PDFDocument : IDocument
 
             using (var pdfLoadedDocument = new PdfLoadedDocument(filePath))
             {
-                bool findAllWords = Settings.Default.FullFind;
+                var findAllWords = Settings.Default.FullFind;
                 var foundWords = new HashSet<string>();
                 var length = pdfLoadedDocument.Pages.Count;
 
-                // Iterate over all the pages
+
+
+                // Find the longest word length
+                int maxLength = lines.Max(word => word.Length);
+                int additionalTextLength = maxLength * 2;  // Double the length of the longest word
+
                 for (int i = 0; i < length; i++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     string pageText = pdfLoadedDocument.Pages[i].ExtractText();
 
+                    // Check if page text is not null or empty, and remove spaces and line breaks
+                    if (!string.IsNullOrEmpty(pageText))
+                    {
+                        pageText = pageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                    }
+
+                    // If not the last page, append text from the next page
+                    if (i + 1 < length)
+                    {
+                        string nextPageText = pdfLoadedDocument.Pages[i + 1].ExtractText();
+
+                        // Check if next page text is not null or empty, and clean it
+                        if (!string.IsNullOrEmpty(nextPageText))
+                        {
+                            nextPageText = nextPageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                            pageText += nextPageText.Substring(0, Math.Min(nextPageText.Length, additionalTextLength));
+                        }
+                    }
+
+                    // Search for each word in the page text
                     foreach (var word in lines)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-
-                        // If the word is found, add it to the foundWords set
-                        if (pageText.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (!string.IsNullOrEmpty(pageText) && pageText.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             foundWords.Add(word);
                         }
@@ -62,14 +85,13 @@ public class PDFDocument : IDocument
 
                     cancellationToken.ThrowIfCancellationRequested();
 
-
-                    // If looking for all words, and we've already found them all, stop searching
+                    // If all words are found, stop searching
                     if (findAllWords && foundWords.Count == lines.Count)
                     {
                         return true;
                     }
 
-                    // If looking for at least one word, and we've found any, stop searching
+                    // If any word is found, stop searching
                     if (!findAllWords && foundWords.Count > 0)
                     {
                         return true;
@@ -78,6 +100,8 @@ public class PDFDocument : IDocument
 
                 return findAllWords ? foundWords.Count == lines.Count : foundWords.Count > 0;
             }
-        }, cancellationToken);
+
+        });
     }
+
 }
