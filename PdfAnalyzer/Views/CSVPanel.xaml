@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:PdfAnalyzer.View"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="clr-namespace:PdfAnalyzer.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewmodels:CSVPanelViewModel}"
@@ -14,20 +15,43 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TextBlock
             Margin="8,0"
             Style="{StaticResource MaterialDesignHeadline4TextBlock}"
             Text="CSV Document" />
-        <ItemsControl
-            Grid.Row="1"
-            Margin="8"
-            FontSize="20"
-            ItemsSource="{Binding Document.CSVLines}" />
-        <Button
+        <materialDesign:Card Grid.Row="1" Margin="8">
+            <ItemsControl
+                Margin="8"
+                FontSize="20"
+                ItemsSource="{Binding Document.CSVLines}" />
+        </materialDesign:Card>
+
+        <TextBlock
             Grid.Row="2"
+            Margin="8,8,0,0"
+            Style="{StaticResource MaterialDesignHeadline4TextBlock}"
+            Text="Settings" />
+        <materialDesign:Card Grid.Row="3" Margin="8">
+            <StackPanel Margin="16">
+                <TextBlock FontSize="16" Text="Finding a full match" />
+                <ToggleButton
+                    Margin="0,8,0,16"
+                    HorizontalAlignment="Left"
+                    FontSize="16"
+                    IsChecked="{Binding FullFind}" />
+                <TextBlock FontSize="16" Text="Max threads count" />
+                <materialDesign:DecimalUpDown FontSize="16" Minimum="1" Value="{Binding ThreadCound, Delay=1000}"/>
+            </StackPanel>
+        </materialDesign:Card>
+
+
+        <Button
+            Grid.Row="4"
             Margin="40"
             Command="{Binding OpenCSVCommand}"
             Content="Load CSV" />

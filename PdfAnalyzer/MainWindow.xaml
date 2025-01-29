@@ -21,9 +21,10 @@
         <views:PDFPanel />
         <GridSplitter
             Grid.Column="1"
-            Width="4"
+            Width="8"
             HorizontalAlignment="Stretch"
-            VerticalContentAlignment="Stretch" />
+            VerticalContentAlignment="Stretch"
+            Style="{StaticResource MaterialDesignGridSplitter}" />
         <views:CSVPanel Grid.Column="2" />
     </Grid>
 </Window>
