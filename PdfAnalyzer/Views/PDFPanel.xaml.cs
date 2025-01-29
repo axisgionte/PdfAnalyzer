@@ -26,5 +26,6 @@ namespace PdfAnalyzer.View
             InitializeComponent();
             DataContext = new PDFPanelViewModel();
         }
+
     }
 }
