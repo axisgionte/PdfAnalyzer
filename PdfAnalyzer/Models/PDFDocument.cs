@@ -5,6 +5,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Threading;
+using PdfAnalyzer.Properties;
 
 public class PDFDocument : IDocument
 {
@@ -23,6 +24,12 @@ public class PDFDocument : IDocument
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // If the lines list is empty, return based on the findAllWords flag
+            if (lines.Count == 0)
+            {
+                return false;
+            }
+
             // Check if the file exists
             if (!File.Exists(filePath))
             {
@@ -32,20 +39,21 @@ public class PDFDocument : IDocument
 
             using (var pdfLoadedDocument = new PdfLoadedDocument(filePath))
             {
+                bool findAllWords = Settings.Default.FullFind;
                 var foundWords = new HashSet<string>();
                 var length = pdfLoadedDocument.Pages.Count;
 
-                // Iterate through all the pages
+                // Iterate over all the pages
                 for (int i = 0; i < length; i++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     string pageText = pdfLoadedDocument.Pages[i].ExtractText();
 
-                    // Look for each word in the page text
                     foreach (var word in lines)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
 
+                        // If the word is found, add it to the foundWords set
                         if (pageText.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             foundWords.Add(word);
@@ -53,10 +61,22 @@ public class PDFDocument : IDocument
                     }
 
                     cancellationToken.ThrowIfCancellationRequested();
+
+
+                    // If looking for all words, and we've already found them all, stop searching
+                    if (findAllWords && foundWords.Count == lines.Count)
+                    {
+                        return true;
+                    }
+
+                    // If looking for at least one word, and we've found any, stop searching
+                    if (!findAllWords && foundWords.Count > 0)
+                    {
+                        return true;
+                    }
                 }
 
-                // Return true if all lines are found
-                return foundWords.Count == lines.Count;
+                return findAllWords ? foundWords.Count == lines.Count : foundWords.Count > 0;
             }
         }, cancellationToken);
     }
