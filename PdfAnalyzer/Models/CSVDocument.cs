@@ -1,30 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-public class CSVDocument:IDocument
+public class CSVDocument : IDocument
 {
     private List<string> lines;
     private readonly string filePath;
 
     public CSVDocument(string filePath)
-	{
+    {
         this.filePath = filePath;
+        lines = new List<string>();
         Load();
-	}
-    
+    }
+
     public string FilePath => filePath;
-    public List<string> Lines => lines ?? new List<string>();
-    
+    public List<string> Lines => lines;
+
+    // Load the file content into the lines list
     private void Load()
     {
-
         if (File.Exists(filePath))
         {
-            var line = File.ReadAllLines(filePath);
-            lines = line.ToList();
+            lines = File.ReadLines(filePath).ToList();
         }
         else
         {

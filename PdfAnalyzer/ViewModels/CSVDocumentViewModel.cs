@@ -16,18 +16,20 @@ namespace PdfAnalyzer.ViewModels
             set => SetProperty(ref csvLines, value);
         }
 
+        // Constructor to initialize the ViewModel
         public CSVDocumentViewModel(string fileName)
         {
             document = new CSVDocument(fileName);
-            CSVLines = document.Lines;
+            CSVLines = document.Lines ?? new List<string>();  // Safeguard in case Lines is null
             SendUpdateCSVFileMessage();
         }
 
-        private void SendUpdateCSVFileMessage() 
+        // Method to send message for updated CSV file if it contains data
+        private void SendUpdateCSVFileMessage()
         {
-            if (document.Lines.Any())
+            if (CSVLines.Any())
             {
-                Messenger.Send(new UpdateCSVMessage(document.Lines), 1);
+                Messenger.Send(new UpdateCSVMessage(CSVLines), 1);
             }
         }
     }
