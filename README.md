@@ -1,8 +1,8 @@
-1. Project Description
+# Project Description
 
   The program is developed using WPF with the MVVM pattern and Messenger. It is designed for processing and verifying documents for full or partial compliance.
 
-2. Features
+# Features
 
   Automatic processing of CSV and PDF files.
   
@@ -12,7 +12,7 @@
   
   Automatic search initiation when files are added.
 
-3. Usage
+# Usage
 
   Add a CSV file and PDF documents to the program.
   
@@ -20,7 +20,7 @@
   
   Processing results will be displayed upon completion.
 
-4. Technologies
+# Technologies
 
   WPF (Windows Presentation Foundation)
   
@@ -28,7 +28,7 @@
   
   Messenger (message passing between components)
 
-5. Requirements
+# Requirements
 
   .NET Framework 
   
@@ -36,7 +36,7 @@
 
   CSV and PDF files for analysis
 
-6. Installation and Launch
+# Installation and Launch
 
   Download and install .NET Framework (if not already installed).
   
