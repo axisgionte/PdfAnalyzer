@@ -10,6 +10,7 @@ using Microsoft.Win32;
 using PdfAnalyzer.Messages;
 using System.Windows.Input;
 using System.Collections.Generic;
+using System.Windows;
 
 namespace PdfAnalyzer.ViewModels
 {
@@ -23,6 +24,7 @@ namespace PdfAnalyzer.ViewModels
         private int taskCompleted;
 
         public ICommand OpenPDFCommand { get; }
+        public ICommand SearchCommand { get; }
 
         public ObservableCollection<PDFDocumentViewModel> PDFDocuments
         {
@@ -55,6 +57,18 @@ namespace PdfAnalyzer.ViewModels
             pdfDocuments = new ObservableCollection<PDFDocumentViewModel>();
             csvDocument = new List<string>();
             OpenPDFCommand = new RelayCommand(Open);
+            SearchCommand = new RelayCommand(Search);
+            Application.Current.Exit += Exit;
+        }
+
+        private void Exit(object sender, ExitEventArgs e)
+        {
+           cancellationTokenSource?.Cancel();
+        }
+
+        private void Search()
+        {
+            UpdateCSVMessage();
         }
 
         // Open file dialog and add selected PDFs to the ObservableCollection
@@ -89,7 +103,6 @@ namespace PdfAnalyzer.ViewModels
             csvDocument = message.CSVDocument;
             UpdateCSVMessage();
         }
-
 
         private async Task UpdateCSVMessage()
         {    
@@ -156,5 +169,6 @@ namespace PdfAnalyzer.ViewModels
             }
         }
 
+        
     }
 }

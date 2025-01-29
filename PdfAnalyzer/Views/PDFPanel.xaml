@@ -32,6 +32,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <TextBlock
                 Margin="8,0"
@@ -66,6 +67,24 @@
                         <TextBlock FontSize="20" Text=":" />
                         <TextBlock FontSize="20" Text="{Binding TaskCompleted}" />
                     </StackPanel>
+                    <Button
+                        Grid.Row="4"
+                        MaxWidth="200"
+                        Margin="0,8"
+                        Command="{Binding SearchCommand}"
+                        Content="Search">
+                        <Button.Style>
+                            <Style BasedOn="{StaticResource MaterialDesignFlatButton}" TargetType="Button">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding PDFDocuments.Count}" Value="0">
+                                        <DataTrigger.Setters>
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger.Setters>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                     <ProgressBar
                         Grid.Row="4"
                         Height="8"
@@ -76,8 +95,11 @@
 
             </materialDesign:Card>
 
+
+
+
             <Button
-                Grid.Row="2"
+                Grid.Row="3"
                 Margin="40"
                 Command="{Binding OpenPDFCommand}"
                 Content="Load PDF" />
