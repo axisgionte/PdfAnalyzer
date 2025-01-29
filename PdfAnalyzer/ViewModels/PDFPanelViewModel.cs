@@ -19,6 +19,8 @@ namespace PdfAnalyzer.ViewModels
         private ObservableCollection<PDFDocumentViewModel> pdfDocuments;
         private CancellationTokenSource cancellationTokenSource;
         private List<string> csvDocument;
+        private int allTask;
+        private int taskCompleted;
 
         public ICommand OpenPDFCommand { get; }
 
@@ -34,13 +36,24 @@ namespace PdfAnalyzer.ViewModels
             set => SetProperty(ref pdfDocument, value);
         }
 
+        public int AllTask
+        {
+            get => allTask;
+            set => SetProperty(ref allTask, value);
+        }
 
+        public int TaskCompleted
+        {
+            get => taskCompleted;
+            set => SetProperty(ref taskCompleted, value);
+        }
 
         public PDFPanelViewModel()
         {
             Messenger.Register<PDFPanelViewModel, UpdateCSVMessage, int>(this, 1, HandleUpdateCSVMessage);
 
             pdfDocuments = new ObservableCollection<PDFDocumentViewModel>();
+            csvDocument = new List<string>();
             OpenPDFCommand = new RelayCommand(Open);
         }
 
@@ -76,41 +89,72 @@ namespace PdfAnalyzer.ViewModels
             csvDocument = message.CSVDocument;
             UpdateCSVMessage();
         }
-        
+
 
         private async Task UpdateCSVMessage()
-        {
-            cancellationTokenSource?.Cancel();
-
-            // Reset the cancellation token source for the current operation
+        {    
+            cancellationTokenSource?.Cancel(); // Cancel any previous operation
             cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
 
             // Iterate through each PDF document and apply the update asynchronously
             if (pdfDocuments.Any())
             {
-                var documents = pdfDocuments.ToArray();
+                
                 var lines = csvDocument.ToList();
+                var tasks = new List<Task>();
+                int maxConcurrentTasks = Properties.Settings.Default.ThreadCount;
+                var semaphore = new SemaphoreSlim(maxConcurrentTasks); // Limit number of concurrent tasks
+
+                AllTask = pdfDocuments.Count;
+                TaskCompleted = 0;
 
                 foreach (var document in pdfDocuments)
                 {
-                    try
+                    // Run tasks concurrently with a limit, allowing cancellation if needed
+                    tasks.Add(Task.Run(async () =>
                     {
-                        // Pass the cancellation token to handle cancellation
-                        await document.UpdateFindStatus(lines, cancellationToken);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        Debug.WriteLine("Operation was canceled.");
-                        return;  // Optionally stop processing further documents
-                    }
-                    catch (Exception ex)
-                    {
-                        // Handle other errors (logging or notifying the user)
-                        Debug.WriteLine($"Error updating document: {ex.Message}");
-                    }
+                        try
+                        {
+                            await semaphore.WaitAsync();  // Wait until we can acquire the semaphore
+                            try
+                            {
+                                // Pass the cancellation token to handle cancellation
+                                await document.UpdateFindStatus(lines, cancellationToken);
+                            }
+                            finally
+                            {
+                                semaphore.Release();  // Release the semaphore so other tasks can proceed
+                            }
+
+                            // Update task completion progress
+                            TaskCompleted++;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            Debug.WriteLine("Operation was canceled.");
+                        }
+                        catch (Exception ex)
+                        {
+                            // Handle other errors
+                            Debug.WriteLine($"Error updating document: {ex.Message}");
+                        }
+                    }, cancellationToken));
+                }
+
+                // Await all tasks to complete before returning control
+                try
+                {
+                    await Task.WhenAll(tasks);  // Wait until all tasks are completed
+                    Debug.WriteLine($"All {AllTask} tasks completed.");
+                }
+                catch (Exception ex)
+                {
+                    // Catch and handle any exception if needed
+                    Debug.WriteLine($"An error occurred while processing documents: {ex.Message}");
                 }
             }
         }
+
     }
 }

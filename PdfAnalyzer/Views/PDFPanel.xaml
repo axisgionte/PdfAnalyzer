@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:PdfAnalyzer.View"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:syncfusion="clr-namespace:Syncfusion.Windows.PdfViewer;assembly=Syncfusion.PdfViewer.WPF"
     xmlns:viewmodels="clr-namespace:PdfAnalyzer.ViewModels"
@@ -29,29 +30,58 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <TextBlock
                 Margin="8,0"
                 Style="{StaticResource MaterialDesignHeadline4TextBlock}"
                 Text="PDF Files" />
-            <ListView
-                Grid.Row="1"
-                HorizontalContentAlignment="Stretch"
-                ItemsSource="{Binding PDFDocuments}"
-                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                SelectedItem="{Binding PDFDocument}"
-                VirtualizingPanel.IsVirtualizing="True">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <views:PDFDocumentView />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+            <materialDesign:Card Grid.Row="1" Margin="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ListView
+                        HorizontalContentAlignment="Stretch"
+                        ItemsSource="{Binding PDFDocuments}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        SelectedItem="{Binding PDFDocument}"
+                        VirtualizingPanel.IsVirtualizing="True">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <views:PDFDocumentView />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <StackPanel
+                        Grid.Row="3"
+                        Margin="8"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Orientation="Horizontal">
+                        <TextBlock FontSize="20" Text="{Binding AllTask}" />
+                        <TextBlock FontSize="20" Text=":" />
+                        <TextBlock FontSize="20" Text="{Binding TaskCompleted}" />
+                    </StackPanel>
+                    <ProgressBar
+                        Grid.Row="4"
+                        Height="8"
+                        VerticalAlignment="Bottom"
+                        Maximum="{Binding AllTask}"
+                        Value="{Binding TaskCompleted}" />
+                </Grid>
+
+            </materialDesign:Card>
+
             <Button
                 Grid.Row="2"
                 Margin="40"
                 Command="{Binding OpenPDFCommand}"
                 Content="Load PDF" />
+
         </Grid>
     </Grid>
 </UserControl>
