@@ -29,6 +29,8 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <TextBlock
                 Margin="8,0"
@@ -47,11 +49,29 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+            <StackPanel
+                Grid.Row="3"
+                Margin="8"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Orientation="Horizontal">
+                <TextBlock FontSize="20" Text="{Binding AllTask}" />
+                <TextBlock FontSize="20" Text=":" />
+                <TextBlock FontSize="20" Text="{Binding TaskCompleted}" />
+            </StackPanel>
+            <ProgressBar
+                Grid.Row="4"
+                Height="8"
+                Margin="0,0,0,8"
+                VerticalAlignment="Bottom"
+                Maximum="{Binding AllTask}"
+                Value="{Binding TaskCompleted}" />
             <Button
                 Grid.Row="2"
                 Margin="40"
                 Command="{Binding OpenPDFCommand}"
                 Content="Load PDF" />
+
         </Grid>
     </Grid>
 </UserControl>
