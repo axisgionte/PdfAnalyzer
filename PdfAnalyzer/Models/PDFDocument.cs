@@ -3,6 +3,8 @@ using Syncfusion.Pdf.Parsing;
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Threading;
 
 public class PDFDocument : IDocument
 {
@@ -15,35 +17,47 @@ public class PDFDocument : IDocument
 
     public string FilePath => filePath;
 
-    public bool FindText(List<string> lines)
+    public Task<bool> FindTextAsync(List<string> lines, CancellationToken cancellationToken)
     {
-        if (!File.Exists(filePath))
+        return Task.Run(() =>
         {
-            Debug.WriteLine($"Document not found {filePath}");
-            return false;
-        }
+            cancellationToken.ThrowIfCancellationRequested();
 
-
-        using (var pdfLoadedDocument = new PdfLoadedDocument(filePath))
-        {
-            var foundWords = new List<string>();
-
-            var length = pdfLoadedDocument.Pages.Count;
-            for (int i = 0; i < length; i++)
+            // Check if the file exists
+            if (!File.Exists(filePath))
             {
-                string pageText = pdfLoadedDocument.Pages[i].ExtractText();
-
-                foreach (var word in lines)
-                {
-                    if (pageText.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        if (!foundWords.Contains(word))
-                            foundWords.Add(word);
-                    }
-                }
+                Debug.WriteLine($"Document not found {filePath}");
+                return false;
             }
 
-            return foundWords.Count > 0 && foundWords.Count == lines.Count;
-        }
+            using (var pdfLoadedDocument = new PdfLoadedDocument(filePath))
+            {
+                var foundWords = new HashSet<string>();
+                var length = pdfLoadedDocument.Pages.Count;
+
+                // Iterate through all the pages
+                for (int i = 0; i < length; i++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    string pageText = pdfLoadedDocument.Pages[i].ExtractText();
+
+                    // Look for each word in the page text
+                    foreach (var word in lines)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (pageText.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            foundWords.Add(word);
+                        }
+                    }
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
+                // Return true if all lines are found
+                return foundWords.Count == lines.Count;
+            }
+        }, cancellationToken);
     }
 }

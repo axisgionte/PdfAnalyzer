@@ -1,17 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
-using System.Windows.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Win32;
-using PdfAnalyzer.Messages;
 
 namespace PdfAnalyzer.ViewModels
 {
@@ -19,7 +10,7 @@ namespace PdfAnalyzer.ViewModels
     {
         private CSVDocumentViewModel document;
 
-        public CSVDocumentViewModel Document 
+        public CSVDocumentViewModel Document
         {
             get => document;
             set => SetProperty(ref document, value);
@@ -32,6 +23,7 @@ namespace PdfAnalyzer.ViewModels
             OpenCSVCommand = new RelayCommand(Open);
         }
 
+        // Open CSV file using OpenFileDialog
         private void Open()
         {
             var openFileDialog = new OpenFileDialog
@@ -44,9 +36,12 @@ namespace PdfAnalyzer.ViewModels
 
             if (openFileDialog.ShowDialog() == true)
             {
-                Document = new CSVDocumentViewModel(openFileDialog.FileName);
+                // Only create new Document if a file is selected
+                if (!string.IsNullOrEmpty(openFileDialog.FileName))
+                {
+                    Document = new CSVDocumentViewModel(openFileDialog.FileName);
+                }
             }
-        } 
-
+        }
     }
 }
