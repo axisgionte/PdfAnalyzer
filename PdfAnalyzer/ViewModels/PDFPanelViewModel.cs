@@ -11,6 +11,7 @@ using PdfAnalyzer.Messages;
 using System.Windows.Input;
 using System.Collections.Generic;
 using System.Windows;
+using PdfAnalyzer.Properties;
 
 namespace PdfAnalyzer.ViewModels
 {
@@ -113,8 +114,14 @@ namespace PdfAnalyzer.ViewModels
             // Iterate through each PDF document and apply the update asynchronously
             if (pdfDocuments.Any())
             {
+
+                var findAllWords = Settings.Default.FullFind;
+                var lines = new List<string>();
+
+                lines = findAllWords
+                    ? csvDocument
+                    : csvDocument.Select(word => word.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty)).ToList();
                 
-                var lines = csvDocument.Select(word => word.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty)).ToList();
                 var tasks = new List<Task>();
                 int maxConcurrentTasks = Properties.Settings.Default.ThreadCount;
                 var semaphore = new SemaphoreSlim(maxConcurrentTasks); // Limit number of concurrent tasks

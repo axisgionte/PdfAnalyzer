@@ -67,7 +67,7 @@ namespace PdfAnalyzer.ViewModels
             if (openFileDialog.ShowDialog() == true)
             {
                 // Only create new Document if a file is selected
-                if (!string.IsNullOrEmpty(openFileDialog.FileName))
+                if (string.IsNullOrEmpty(openFileDialog.FileName) == false)
                 {
                     Document = new CSVDocumentViewModel(openFileDialog.FileName);
                 }

@@ -31,7 +31,7 @@ public class PDFDocument : IDocument
                 return false;
             }
 
-            if (!File.Exists(filePath))
+            if (File.Exists(filePath) == false)
             {
                 Debug.WriteLine($"Document not found {filePath}");
                 return false;
@@ -55,9 +55,12 @@ public class PDFDocument : IDocument
                     string pageText = pdfLoadedDocument.Pages[i].ExtractText();
 
                     // Check if page text is not null or empty, and remove spaces and line breaks
-                    if (!string.IsNullOrEmpty(pageText))
+                    if (string.IsNullOrEmpty(pageText) == false)
                     {
-                        pageText = pageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                        if (findAllWords == false)
+                        {
+                            pageText = pageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                        }
                     }
 
                     // If not the last page, append text from the next page
@@ -66,9 +69,12 @@ public class PDFDocument : IDocument
                         string nextPageText = pdfLoadedDocument.Pages[i + 1].ExtractText();
 
                         // Check if next page text is not null or empty, and clean it
-                        if (!string.IsNullOrEmpty(nextPageText))
+                        if (string.IsNullOrEmpty(nextPageText) == false)
                         {
-                            nextPageText = nextPageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                            if (findAllWords == false)
+                            {
+                                nextPageText = nextPageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                            }
                             pageText += nextPageText.Substring(0, Math.Min(nextPageText.Length, additionalTextLength));
                         }
                     }
@@ -77,7 +83,7 @@ public class PDFDocument : IDocument
                     foreach (var word in lines)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        if (!string.IsNullOrEmpty(pageText) && pageText.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (string.IsNullOrEmpty(pageText) == false && pageText.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             foundWords.Add(word);
                         }
@@ -92,7 +98,7 @@ public class PDFDocument : IDocument
                     }
 
                     // If any word is found, stop searching
-                    if (!findAllWords && foundWords.Count > 0)
+                    if (findAllWords == false && foundWords.Count > 0)
                     {
                         return true;
                     }
