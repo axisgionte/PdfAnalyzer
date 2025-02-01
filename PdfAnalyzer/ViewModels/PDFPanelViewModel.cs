@@ -69,10 +69,9 @@ namespace PdfAnalyzer.ViewModels
 
         private void Search()
         {
-            UpdateCSVMessage();
+            _ = UpdateCSVMessage();
         }
 
-        // Open file dialog and add selected PDFs to the ObservableCollection
         private void Open()
         {
             var openFileDialog = new OpenFileDialog
@@ -93,7 +92,7 @@ namespace PdfAnalyzer.ViewModels
 
                 if (csvDocument.Any()) 
                 {
-                    UpdateCSVMessage();
+                    _ = UpdateCSVMessage();
                 }
             }
         }
@@ -102,80 +101,75 @@ namespace PdfAnalyzer.ViewModels
         private void HandleUpdateCSVMessage(PDFPanelViewModel recipient, UpdateCSVMessage message)
         {
             csvDocument = message.CSVDocument;
-            UpdateCSVMessage();
+            _ = UpdateCSVMessage();
         }
 
         private async Task UpdateCSVMessage()
-        {    
+        {
             cancellationTokenSource?.Cancel(); // Cancel any previous operation
             cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
 
             // Iterate through each PDF document and apply the update asynchronously
-            if (pdfDocuments.Any())
+            if (pdfDocuments.Any() == false)
             {
+                return;
+            }
 
-                var findAllWords = Settings.Default.FullFind;
-                var lines = new List<string>();
+            var findAllWords = Settings.Default.FullFind;
+            var lines = new List<string>();
 
-                lines = findAllWords
-                    ? csvDocument
-                    : csvDocument.Select(word => word.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty)).ToList();
-                
-                var tasks = new List<Task>();
-                int maxConcurrentTasks = Properties.Settings.Default.ThreadCount;
-                var semaphore = new SemaphoreSlim(maxConcurrentTasks); // Limit number of concurrent tasks
+            lines = findAllWords
+                ? csvDocument
+                : csvDocument.Select(word => word.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty)).ToList();
 
-                AllTask = pdfDocuments.Count;
-                TaskCompleted = 0;
+            var tasks = new List<Task>();
+            int maxConcurrentTasks = Settings.Default.ThreadCount;
+            var semaphore = new SemaphoreSlim(maxConcurrentTasks);
 
-                foreach (var document in pdfDocuments)
+            AllTask = pdfDocuments.Count;
+            TaskCompleted = 0;
+
+            foreach (var document in pdfDocuments)
+            {
+                // Run tasks concurrently with a limit, allowing cancellation if needed
+                tasks.Add(Task.Run(async () =>
                 {
-                    // Run tasks concurrently with a limit, allowing cancellation if needed
-                    tasks.Add(Task.Run(async () =>
+                    try
                     {
+                        await semaphore.WaitAsync();
                         try
+                        {         
+                            await document.UpdateFindStatus(lines, cancellationToken);
+                        }
+                        finally
                         {
-                            await semaphore.WaitAsync();  // Wait until we can acquire the semaphore
-                            try
-                            {
-                                // Pass the cancellation token to handle cancellation
-                                await document.UpdateFindStatus(lines, cancellationToken);
-                            }
-                            finally
-                            {
-                                semaphore.Release();  // Release the semaphore so other tasks can proceed
-                            }
+                            semaphore.Release();
+                        }
 
-                            // Update task completion progress
-                            TaskCompleted++;
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            Debug.WriteLine("Operation was canceled.");
-                        }
-                        catch (Exception ex)
-                        {
-                            // Handle other errors
-                            Debug.WriteLine($"Error updating document: {ex.Message}");
-                        }
-                    }, cancellationToken));
-                }
+                        TaskCompleted++;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Debug.WriteLine("Operation was canceled.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Error updating document: {ex.Message}");
+                    }
+                }, cancellationToken));
+            }
 
-                // Await all tasks to complete before returning control
-                try
-                {
-                    await Task.WhenAll(tasks);  // Wait until all tasks are completed
-                    Debug.WriteLine($"All {AllTask} tasks completed.");
-                }
-                catch (Exception ex)
-                {
-                    // Catch and handle any exception if needed
-                    Debug.WriteLine($"An error occurred while processing documents: {ex.Message}");
-                }
+            // Await all tasks to complete before returning control
+            try
+            {
+                await Task.WhenAll(tasks);
+                Debug.WriteLine($"All {AllTask} tasks completed.");
+            }
+            catch (Exception ex)
+            {            
+                Debug.WriteLine($"An error occurred while processing documents: {ex.Message}");
             }
         }
-
-        
     }
 }

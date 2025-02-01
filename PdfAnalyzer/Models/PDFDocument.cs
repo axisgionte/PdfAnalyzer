@@ -25,7 +25,6 @@ public class PDFDocument : IDocument
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // If lines are empty, return based on the findAllWords flag
             if (lines.Count == 0)
             {
                 return false;
@@ -43,18 +42,15 @@ public class PDFDocument : IDocument
                 var foundWords = new HashSet<string>();
                 var length = pdfLoadedDocument.Pages.Count;
 
-
-
                 // Find the longest word length
                 int maxLength = lines.Max(word => word.Length);
-                int additionalTextLength = maxLength * 2;  // Double the length of the longest word
+                int additionalTextLength = maxLength * 2;
 
                 for (int i = 0; i < length; i++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     string pageText = pdfLoadedDocument.Pages[i].ExtractText();
 
-                    // Check if page text is not null or empty, and remove spaces and line breaks
                     if (string.IsNullOrEmpty(pageText) == false)
                     {
                         if (findAllWords == false)
@@ -68,7 +64,6 @@ public class PDFDocument : IDocument
                     {
                         string nextPageText = pdfLoadedDocument.Pages[i + 1].ExtractText();
 
-                        // Check if next page text is not null or empty, and clean it
                         if (string.IsNullOrEmpty(nextPageText) == false)
                         {
                             if (findAllWords == false)
@@ -91,23 +86,27 @@ public class PDFDocument : IDocument
 
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    // If all words are found, stop searching
-                    if (findAllWords && foundWords.Count == lines.Count)
+                    if (findAllWords )
                     {
-                        return true;
+                        // If all words are found, stop searching
+                        if (foundWords.Count == lines.Count)
+                        {
+                            return true;
+                        }
                     }
-
-                    // If any word is found, stop searching
-                    if (findAllWords == false && foundWords.Count > 0)
+                    else 
                     {
-                        return true;
+                        // If any word is found, stop searching
+                        if (foundWords.Count > 0)
+                        {
+                            return true;
+                        }
                     }
                 }
 
-                return findAllWords ? foundWords.Count == lines.Count : foundWords.Count > 0;
+                return false;
             }
 
         });
     }
-
 }
