@@ -11,6 +11,7 @@ namespace PdfAnalyzer.ViewModels
     {
         private CSVDocumentViewModel document;
         private bool fullFind;
+        private bool ahoCorasic;
         private int threadCount;
         public CSVDocumentViewModel Document
         {
@@ -25,7 +26,20 @@ namespace PdfAnalyzer.ViewModels
             {
                 if (SetProperty(ref fullFind, value))
                 {
-                    Settings.Default.FullFind = value;
+                    Settings.Default.FindAny = value;
+                    Settings.Default.Save();
+                }
+            }
+        }
+
+        public bool AhoCorasic
+        {
+            get => ahoCorasic;
+            set
+            {
+                if (SetProperty(ref ahoCorasic, value))
+                {
+                    Settings.Default.AhoCorasick = value;
                     Settings.Default.Save();
                 }
             }
@@ -49,7 +63,7 @@ namespace PdfAnalyzer.ViewModels
         public CSVPanelViewModel()
         {
             OpenCSVCommand = new RelayCommand(Open);
-            FullFind = Settings.Default.FullFind;
+            FullFind = Settings.Default.FindAny;
             ThreadCound = Settings.Default.ThreadCount;
         }
 

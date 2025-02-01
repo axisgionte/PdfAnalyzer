@@ -3,31 +3,34 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-public class CSVDocument : IDocument
+namespace PdfAnalyzer.Models
 {
-    private List<string> lines;
-    private readonly string filePath;
-
-    public CSVDocument(string filePath)
+    public class CSVDocument : IDocument
     {
-        this.filePath = filePath;
-        lines = new List<string>();
-        Load();
-    }
+        private List<string> lines;
+        private readonly string filePath;
 
-    public string FilePath => filePath;
-    public List<string> Lines => lines;
-
-    // Load the file content into the lines list
-    private void Load()
-    {
-        if (File.Exists(filePath))
+        public CSVDocument(string filePath)
         {
-            lines = File.ReadLines(filePath).ToList();
+            this.filePath = filePath;
+            lines = new List<string>();
+            Load();
         }
-        else
+
+        public string FilePath => filePath;
+        public List<string> Lines => lines;
+
+        // Load the file content into the lines list
+        private void Load()
         {
-            Debug.WriteLine($"Document not found {filePath}");
+            if (File.Exists(filePath))
+            {
+                lines = File.ReadLines(filePath).ToList();
+            }
+            else
+            {
+                Debug.WriteLine($"Document not found {filePath}");
+            }
         }
     }
 }
