@@ -2,6 +2,7 @@
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PdfAnalyzer.Messages;
+using PdfAnalyzer.Models;
 
 namespace PdfAnalyzer.ViewModels
 {

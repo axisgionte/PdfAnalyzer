@@ -44,8 +44,17 @@
                     HorizontalAlignment="Left"
                     FontSize="16"
                     IsChecked="{Binding FullFind}" />
+                <TextBlock FontSize="16" Text="Use Aho-Corasick algorytm" />
+                <ToggleButton
+                    Margin="0,8,0,16"
+                    HorizontalAlignment="Left"
+                    FontSize="16"
+                    IsChecked="{Binding AhoCorasic}" />
                 <TextBlock FontSize="16" Text="Max threads count" />
-                <materialDesign:DecimalUpDown FontSize="16" Minimum="1" Value="{Binding ThreadCound, Delay=1000}"/>
+                <materialDesign:DecimalUpDown 
+                    FontSize="16"
+                    Minimum="1"
+                    Value="{Binding ThreadCound, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
         </materialDesign:Card>
 

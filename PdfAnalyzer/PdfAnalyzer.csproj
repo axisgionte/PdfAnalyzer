@@ -127,6 +127,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Messages\UpdateCSVMessage.cs" />
+    <Compile Include="Searchers\AhoCorasick.cs" />
+    <Compile Include="Searchers\DefaultSearcher.cs" />
     <Compile Include="ViewModels\CSVPanelViewModel.cs" />
     <Compile Include="ViewModels\CSVDocumentViewModel.cs" />
     <Compile Include="ViewModels\PDFDocumentViewModel.cs" />

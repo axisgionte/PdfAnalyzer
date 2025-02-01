@@ -7,107 +7,108 @@ using System.Threading.Tasks;
 using System.Threading;
 using PdfAnalyzer.Properties;
 using System.Linq;
+using PdfAnalyzer.Searchers;
 
-public class PDFDocument : IDocument
+namespace PdfAnalyzer.Models
 {
-    private readonly string filePath;
-
-    public PDFDocument(string path)
+    public class PDFDocument : IDocument
     {
-        filePath = path;
-    }
+        private readonly string filePath;
 
-    public string FilePath => filePath;
-
-    public Task<bool> FindTextAsync(List<string> lines, CancellationToken cancellationToken)
-    {
-        return Task.Run(() =>
+        public PDFDocument(string path)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            filePath = path;
+        }
 
-            // If lines are empty, return based on the findAllWords flag
-            if (lines.Count == 0)
+        public string FilePath => filePath;
+
+        public Task<bool> FindTextAsync(List<string> lines, CancellationToken cancellationToken)
+        {
+            return Task.Run(() =>
             {
-                return false;
-            }
+                cancellationToken.ThrowIfCancellationRequested();
 
-            if (File.Exists(filePath) == false)
-            {
-                Debug.WriteLine($"Document not found {filePath}");
-                return false;
-            }
-
-            using (var pdfLoadedDocument = new PdfLoadedDocument(filePath))
-            {
-                var findAllWords = Settings.Default.FullFind;
-                var foundWords = new HashSet<string>();
-                var length = pdfLoadedDocument.Pages.Count;
-
-
-
-                // Find the longest word length
-                int maxLength = lines.Max(word => word.Length);
-                int additionalTextLength = maxLength * 2;  // Double the length of the longest word
-
-                for (int i = 0; i < length; i++)
+                if (lines.Count == 0)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    string pageText = pdfLoadedDocument.Pages[i].ExtractText();
-
-                    // Check if page text is not null or empty, and remove spaces and line breaks
-                    if (string.IsNullOrEmpty(pageText) == false)
-                    {
-                        if (findAllWords == false)
-                        {
-                            pageText = pageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
-                        }
-                    }
-
-                    // If not the last page, append text from the next page
-                    if (i + 1 < length)
-                    {
-                        string nextPageText = pdfLoadedDocument.Pages[i + 1].ExtractText();
-
-                        // Check if next page text is not null or empty, and clean it
-                        if (string.IsNullOrEmpty(nextPageText) == false)
-                        {
-                            if (findAllWords == false)
-                            {
-                                nextPageText = nextPageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
-                            }
-                            pageText += nextPageText.Substring(0, Math.Min(nextPageText.Length, additionalTextLength));
-                        }
-                    }
-
-                    // Search for each word in the page text
-                    foreach (var word in lines)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        if (string.IsNullOrEmpty(pageText) == false && pageText.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            foundWords.Add(word);
-                        }
-                    }
-
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    // If all words are found, stop searching
-                    if (findAllWords && foundWords.Count == lines.Count)
-                    {
-                        return true;
-                    }
-
-                    // If any word is found, stop searching
-                    if (findAllWords == false && foundWords.Count > 0)
-                    {
-                        return true;
-                    }
+                    return false;
                 }
 
-                return findAllWords ? foundWords.Count == lines.Count : foundWords.Count > 0;
-            }
+                if (File.Exists(filePath) == false)
+                {
+                    Debug.WriteLine($"Document not found {filePath}");
+                    return false;
+                }
 
-        });
+                using (var pdfLoadedDocument = new PdfLoadedDocument(filePath))
+                {
+                    var searchResult = new HashSet<string>();
+                    var findAny = Settings.Default.FindAny;
+                    var ahoCorasick = Settings.Default.AhoCorasick;
+                    var length = pdfLoadedDocument.Pages.Count;
+
+                    // Find the longest line length
+                    int maxLength = lines.Max(line => line.Length);
+                    int additionalTextLength = maxLength * 2;
+
+                    for (int i = 0; i < length; i++)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        string pageText = pdfLoadedDocument.Pages[i].ExtractText();
+
+                        if (string.IsNullOrEmpty(pageText) == false)
+                        {
+                            if (findAny == false)
+                            {
+                                pageText = pageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                            }
+                        }
+
+                        // If not the last page, append text from the next page
+                        if (i + 1 < length)
+                        {
+                            string nextPageText = pdfLoadedDocument.Pages[i + 1].ExtractText();
+
+                            if (string.IsNullOrEmpty(nextPageText) == false)
+                            {
+                                if (findAny == false)
+                                {
+                                    nextPageText = nextPageText.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                                }
+                                pageText += nextPageText.Substring(0, Math.Min(nextPageText.Length, additionalTextLength));
+                            }
+                        }
+
+                        Dictionary<string, List<int>> results = ahoCorasick
+                            ? pageText.AhoCorasickSearch(lines, findAny, cancellationToken)
+                            : pageText.DefaultSearch(lines, findAny, cancellationToken);
+
+                        if (findAny == false && results.Any())
+                        {
+                            return true;
+                        }
+
+                        foreach (var result in results)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            if (searchResult.Contains(result.Key) == false)
+                            {
+                                searchResult.Add(result.Key);
+                            }
+                        }
+
+                        if (findAny && searchResult.Count == lines.Count)
+                        {
+                            // If all lines are found, stop searching
+                            return true;
+                        }
+
+                    }
+
+                    return false;
+                }
+
+            });
+        }
     }
-
 }

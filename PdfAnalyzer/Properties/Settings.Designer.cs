@@ -38,12 +38,24 @@ namespace PdfAnalyzer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool FullFind {
+        public bool FindAny {
             get {
-                return ((bool)(this["FullFind"]));
+                return ((bool)(this["FindAny"]));
             }
             set {
-                this["FullFind"] = value;
+                this["FindAny"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AhoCorasick {
+            get {
+                return ((bool)(this["AhoCorasick"]));
+            }
+            set {
+                this["AhoCorasick"] = value;
             }
         }
     }
