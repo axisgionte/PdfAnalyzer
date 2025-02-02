@@ -25,7 +25,11 @@ namespace PdfAnalyzer.Models
         {
             if (File.Exists(filePath))
             {
-                lines = File.ReadLines(filePath).ToList();
+                var rows = File.ReadAllLines(filePath);
+                if(rows.Length > 0)
+                {
+                    lines = rows.ToHashSet().ToList();
+                } 
             }
             else
             {
